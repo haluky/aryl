@@ -35,7 +35,7 @@ int interval = 2000;          // interval between sends
 
 
 ///
-/// LoRa Stage
+/// LoRa Stage xy1 0035
 ///
 
 
