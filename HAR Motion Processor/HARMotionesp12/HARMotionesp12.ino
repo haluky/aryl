@@ -64,6 +64,8 @@ int pirState = LOW;             // we start, assuming no motion detected
 void onReceive(int packetSize) {
   if (packetSize == 0) return;          // if there's no packet, return
 
+
+
   // read packet header bytes:
   int recipient = LoRa.read();          // recipient address
   int sender = LoRa.read();            // sender address
@@ -86,6 +88,9 @@ void onReceive(int packetSize) {
     Serial.println("This message is not for me.");
     return;                             // skip rest of function
   }
+
+
+
 
   // if message is for this device, or broadcast, print details:
   Serial.println("Received from: 0x" + String(sender, HEX));

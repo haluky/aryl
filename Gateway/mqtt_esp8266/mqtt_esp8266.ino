@@ -12,6 +12,7 @@ PubSubClient client(espClient);
 long lastMsg = 0;
 char msg[50];
 int value = 0;
+int maviPin= 2;
 
 
 
@@ -42,6 +43,11 @@ int interval = 2000;          // interval between sends
 
 
 void onReceive(int packetSize) {
+ 
+ 
+
+
+
   if (packetSize == 0) return;          // if there's no packet, return
 
   // read packet header bytes:
@@ -76,6 +82,11 @@ void onReceive(int packetSize) {
   Serial.println("RSSI: " + String(LoRa.packetRssi()));
   Serial.println("Snr: " + String(LoRa.packetSnr()));
   Serial.println();
+analogWrite(maviPin,0);
+
+if(incoming!="")
+  analogWrite(maviPin,255);
+
 
   String bbKing = "ARN0x"+ String(sender, HEX)+"_"+incoming+ String(LoRa.packetRssi());
 
@@ -87,7 +98,8 @@ void onReceive(int packetSize) {
   Serial.println("Sending to CORE");
 
      client.publish("CORE/ARN",deviceLinkX);
-
+     delay(150);
+  analogWrite(maviPin,0);
 
   
 }
@@ -111,6 +123,7 @@ String msgString = "";String msgString2 = ""; String firstThree="";
 Timer t;
 
 void setup() {
+  pinMode(maviPin, OUTPUT);
   pinMode(BUILTIN_LED, OUTPUT);     // Initialize the BUILTIN_LED pin as an output
   Serial.begin(115200);
   setup_wifi();
@@ -139,6 +152,7 @@ void setup_wifi() {
   Serial.println("IP address: ");
   Serial.println(WiFi.localIP());
 
+  analogWrite(maviPin,0);
 
 
    LoRa.setPins(csPin, resetPin, irqPin);// set CS, reset, IRQ pin
@@ -158,12 +172,17 @@ void setup_wifi() {
 
 
 void callback(char* topic, byte* payload, unsigned int length) {
+   // analogWrite(maviPin,255);
+
+ 
  Serial.print("Message arrived [");
  Serial.print(topic);
  Serial.print("] ");
  for (int i=0;i<length;i++) {
   char receivedChar = (char)payload[i];
   Serial.print(receivedChar);
+  // analogWrite(maviPin, LOW);
+
  }
 
  
@@ -186,6 +205,9 @@ void callback(char* topic, byte* payload, unsigned int length) {
  Serial.println("----------------------");
  String lastThree = msgString2.substring(5,8);
  Serial.println(lastThree);
+
+ 
+
 /*
  
  firstThree.toCharArray(destinationAddX,50);
@@ -200,6 +222,8 @@ short firstThreeShorted = myNum;
 sendMessage(lastThree,firstThreeShorted);
  
  msgString="";  msgString2=""; Serial.println();
+   //analogWrite(maviPin,0);
+
 }
 
 
@@ -225,7 +249,7 @@ void reconnect() {
       Serial.print(client.state());
       Serial.println(" try again in 5 seconds");
       // Wait 5 seconds before retrying
-      delay(5000);
+      delay(1000);
     }
   }
 }
