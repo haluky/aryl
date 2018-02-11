@@ -3,6 +3,7 @@
 
 // Update these with values suitable for your network.
 
+String currentVal=""; 
 const char* ssid = "sungerbob";
 const char* password = "halukbinreyhan";
 const char* mqtt_server = "areyhome.dynu.com";
@@ -23,10 +24,6 @@ int lightLevel=0;
 BH1750 lightMeter;
 
 
-
-
-
-
 #include <SPI.h>              // include libraries
 #include <LoRa.h>
 #include "Timer.h"
@@ -38,26 +35,17 @@ const int irqPin = D1;         // change for your board; must be a hardware inte
 String outgoing;              // outgoing message
 
 byte msgCount = 0;            // count of outgoing messages
-byte localAddress = 0xBB;     // address of this device
-byte destination = 0xFF;      // destination to send to
+byte localAddress = 0xDD;     // address of this device
+byte destination = 0xBB;      // destination to send to
 long lastSendTime = 0;        // last send time
 int interval = 2000;          // interval between sends
-
-
 
 
 ///
 /// LoRa Stage xy1 0035
 ///
 
-
-
-
 void onReceive(int packetSize) {
- 
- 
-
-
 
   if (packetSize == 0) return;          // if there's no packet, return
 
@@ -97,10 +85,14 @@ void onReceive(int packetSize) {
 
 if(incoming!="")
 {
+  currentVal = incoming;
   Serial.println("123412");
-  analogWrite(maviPin,255);
+  analogWrite(maviPin,incoming.toInt());
   
 }
+
+
+/*
 else  analogWrite(maviPin,1);
 
 
@@ -114,7 +106,11 @@ else  analogWrite(maviPin,1);
   Serial.println("Sending to CORE");
 
      client.publish("CORE/ARN",deviceLinkX);
-     delay(150);
+
+
+*/
+
+  //   delay(150);
 //  analogWrite(maviPin,0);
 
   
@@ -122,45 +118,42 @@ else  analogWrite(maviPin,1);
 
 String msgString = "";String msgString2 = ""; String firstThree="";
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 Timer t;
 
 void setup() {
   pinMode(BUILTIN_LED, OUTPUT);     // Initialize the BUILTIN_LED pin as an output
   Serial.begin(115200);
-  setup_wifi();
-  client.setServer(mqtt_server, 1883);
-  client.setCallback(callback);
+//  setup_wifi();
+ // client.setServer(mqtt_server, 1883);
+//  client.setCallback(callback);
 
   // Initialize the I2C bus (BH1750 library doesn't do this automatically)
-  Wire.begin();
+  //Wire.begin();
   // On esp8266 you can select SCL and SDA pins using Wire.begin(D4, D3);
-   Wire.begin(D3,D4);
+//   Wire.begin(D3,D4);
 
-  lightMeter.begin();
+ // lightMeter.begin();
 
-  Serial.println(F("BH1750 Test begin"));
+ // Serial.println(F("BH1750 Test begin"));
 
   pinMode(maviPin, OUTPUT);
+
   
+   LoRa.setPins(csPin, resetPin, irqPin);// set CS, reset, IRQ pin
+ 
+   if (!LoRa.begin(433E6)) {             // initialize ratio at 915 MHz
+     Serial.println("LoRa init failed. Check your connections.");
+     while (true);                       // if failed, do nothing
+   }
+ 
+   Serial.println("LoRa init succeeded.");
+
+   t.every(1000, taskX);
 }
 
+/*
 
 void setup_wifi() {
-
   delay(10);
   // We start by connecting to a WiFi network
   Serial.println();
@@ -182,21 +175,7 @@ void setup_wifi() {
  // analogWrite(maviPin,255);
 
 
-   LoRa.setPins(csPin, resetPin, irqPin);// set CS, reset, IRQ pin
- 
-   if (!LoRa.begin(433E6)) {             // initialize ratio at 915 MHz
-     Serial.println("LoRa init failed. Check your connections.");
-     while (true);                       // if failed, do nothing
-   }
- 
- 
-   Serial.println("LoRa init succeeded.");
-
-   t.every(1000, taskX);
 }
-
-
-
 
 
 void callback(char* topic, byte* payload, unsigned int length) {
@@ -239,7 +218,6 @@ void callback(char* topic, byte* payload, unsigned int length) {
 /*
  
  firstThree.toCharArray(destinationAddX,50);
- */
 
 char destinationAddX[50]; 
 firstThree.toCharArray(destinationAddX,50);
@@ -251,9 +229,12 @@ sendMessage(lastThree,firstThreeShorted);
  
  msgString="";  msgString2=""; Serial.println();
    //analogWrite(maviPin,0);
- 
-}
+if(lastThree=="111")
+analogWrite(maviPin,1);
+else
+analogWrite(maviPin,255);
 
+}
 
 
 
@@ -262,7 +243,7 @@ void reconnect() {
   while (!client.connected()) {
     Serial.print("Attempting MQTT connection...");
     // Attempt to connect
-    if (client.connect("AREYGATE_1")) {
+    if (client.connect("AREYNod2e")) {
       Serial.println("connected");
       // Once connected, publish an announcement...
 
@@ -283,29 +264,19 @@ void reconnect() {
 }
 
 
-
-
+*/
 
 
  
 void loop()
 {
-  
-  
-
   /*
-  
  if (!client.connected()) {
   reconnect();
- }
+ }*/
 
-*/
-
- client.loop();
- t.update();
-
-
-
+  client.loop();
+  t.update();
   onReceive(LoRa.parsePacket());
 }
 
@@ -340,17 +311,28 @@ void taskX()
   
  //Serial.println(uptime);
 
+/*
+ uint16_t lux = lightMeter.readLightLevel();
+  Serial.print("Light: ");
+  Serial.print(lux);
+  Serial.println(" lx");
 
-
+*/
  
   resetleyiciSayac+=1;
  
   Serial.println(resetleyiciSayac);
 
-  if(resetleyiciSayac==3000)
-  ESP.restart();
-   client.publish("CORE/applications/51OSB/STATE", "im Alive!");
+  if(resetleyiciSayac==35)
+  {
+    Serial.println(currentVal);
+    sendMessage("100-"+currentVal,0xBB);
+Serial.println("hey yo");
 
+    resetleyiciSayac=0;
+  }
+  
+  
  
   if(totalTime>5)
   totalTime=0;
@@ -359,9 +341,3 @@ void taskX()
   ESP.restart();
   
 }
-
-
-
-
-
-

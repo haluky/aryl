@@ -16,7 +16,7 @@ PubSubClient client(espClient);
 long lastMsg = 0;
 char msg[50];
 int value = 0;
-int greenpin = 10; // select the pin for the green LED
+int greenpin = D3; // select the pin for the green LED
 
 //acs712
 const int sensorIn = A0;
