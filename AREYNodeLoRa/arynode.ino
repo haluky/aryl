@@ -1,9 +1,9 @@
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
-
+#include <EEPROM.h>
 // Update these with values suitable for your network.
 
-String currentVal=""; 
+String currentVal="0"; 
 const char* ssid = "sungerbob";
 const char* password = "halukbinreyhan";
 const char* mqtt_server = "areyhome.dynu.com";
@@ -20,8 +20,8 @@ int lightLevel=0;
 
 
 #include <Wire.h>
-#include <BH1750.h>
-BH1750 lightMeter;
+//#include <BH1750.h>
+//BH1750 lightMeter;
 
 
 #include <SPI.h>              // include libraries
@@ -40,7 +40,8 @@ byte destination = 0xBB;      // destination to send to
 long lastSendTime = 0;        // last send time
 int interval = 2000;          // interval between sends
 
-
+int write_value = 100;                               // eeprom'a yazılan değişken veri
+int incomeX=0;
 ///
 /// LoRa Stage xy1 0035
 ///
@@ -85,6 +86,13 @@ void onReceive(int packetSize) {
 
 if(incoming!="")
 {
+  incomeX= incoming.toInt();
+
+Serial.println(incomeX);
+
+  EEPROM.write(100, incomeX);                 // belirlenen adrese değeri yaz
+  EEPROM.commit();
+
   currentVal = incoming;
   Serial.println("123412");
   analogWrite(maviPin,incoming.toInt());
@@ -119,6 +127,7 @@ else  analogWrite(maviPin,1);
 String msgString = "";String msgString2 = ""; String firstThree="";
 
 Timer t;
+int read_value = 0;                                // eeprom'dan okunacak değişken değer
 
 void setup() {
   pinMode(BUILTIN_LED, OUTPUT);     // Initialize the BUILTIN_LED pin as an output
@@ -135,7 +144,10 @@ void setup() {
  // lightMeter.begin();
 
  // Serial.println(F("BH1750 Test begin"));
+ 
 
+
+  
   pinMode(maviPin, OUTPUT);
 
   
@@ -145,10 +157,17 @@ void setup() {
      Serial.println("LoRa init failed. Check your connections.");
      while (true);                       // if failed, do nothing
    }
- 
+
+    
+
    Serial.println("LoRa init succeeded.");
 
    t.every(1000, taskX);
+
+ EEPROM.begin(512);
+  read_value = EEPROM.read(100);                  // adresten değeri oku
+  analogWrite(maviPin,read_value);
+
 }
 
 /*
@@ -302,8 +321,11 @@ int resetleyiciSayac=0;
 int totalTime=0;
 int resetMe=0;
 int uptime=0;
+int showthewaybudda=01;
 
-void taskX() 
+
+
+ void taskX() 
 {
   //onReceive(LoRa.parsePacket());
   uptime=millis()/1000;
@@ -319,15 +341,17 @@ void taskX()
 
 */
  
-  resetleyiciSayac+=1;
- 
+  resetleyiciSayac++;
+
+    EEPROM.begin(512);
+  showthewaybudda = EEPROM.read(100); 
   Serial.println(resetleyiciSayac);
 
   if(resetleyiciSayac==35)
   {
     Serial.println(currentVal);
     sendMessage("100-"+currentVal,0xBB);
-Serial.println("hey yo");
+    Serial.println("hey yo");
 
     resetleyiciSayac=0;
   }
