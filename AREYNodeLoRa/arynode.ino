@@ -24,6 +24,20 @@ int lightLevel=0;
 //BH1750 lightMeter;
 
 
+
+#include <DHT.h>
+#include <DHT_U.h>
+#define DHTPIN            4         // Pin which is connected to the DHT sensor.
+#define DHTTYPE           DHT11     // DHT 11 
+DHT_Unified dht(DHTPIN, DHTTYPE);
+
+
+
+
+
+
+
+
 #include <SPI.h>              // include libraries
 #include <LoRa.h>
 #include "Timer.h"
@@ -94,7 +108,9 @@ Serial.println(incomeX);
   EEPROM.commit();
 
   currentVal = incoming;
-  Serial.println("123412");
+  Serial.println(incoming.toInt());
+
+
   analogWrite(maviPin,incoming.toInt());
   
 }
@@ -167,6 +183,20 @@ void setup() {
  EEPROM.begin(512);
   read_value = EEPROM.read(100);                  // adresten değeri oku
   analogWrite(maviPin,read_value);
+
+  sensor_t sensor;
+
+
+
+
+  dht.begin();
+  dht.temperature().getSensor(&sensor);
+  dht.humidity().getSensor(&sensor);
+
+
+
+
+
 
 }
 
@@ -340,6 +370,29 @@ int showthewaybudda=01;
   Serial.println(" lx");
 
 */
+
+
+
+
+  sensors_event_t event;
+
+  
+  dht.temperature().getEvent(&event);
+  int tempTemp = event.temperature;
+
+
+  String temperature = String(tempTemp);
+
+Serial.println(temperature);
+
+
+
+
+
+
+
+
+
  
   resetleyiciSayac++;
 
@@ -350,7 +403,7 @@ int showthewaybudda=01;
   if(resetleyiciSayac==35)
   {
     Serial.println(currentVal);
-    sendMessage("100-"+currentVal,0xBB);
+    sendMessage(temperature+"-"+currentVal,0xBB);
     Serial.println("hey yo");
 
     resetleyiciSayac=0;
